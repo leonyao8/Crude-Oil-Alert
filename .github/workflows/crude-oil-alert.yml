@@ -1,1 +1,33 @@
+name: Crude oil alert
 
+on:
+  schedule:
+    - cron: "0 20 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: "Alert threshold in percent (use 0 to test the email)"
+        required: false
+        default: "3"
+
+jobs:
+  check-crude:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check crude oil and send alert if needed
+        run: python crude_oil_alert.py
+        env:
+          EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          THRESHOLD: ${{ github.event.inputs.threshold || '3' }}
